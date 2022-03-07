@@ -6,7 +6,12 @@ const CommandNotFound = require('./errors/CommandNotFound.js');
 const fs = require('node:fs');
 
 const client = new Client({
-    intents: [Intents.FLAGS.GUILDS]
+    intents: [
+        Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES,
+        Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_MEMBERS,
+        Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.DIRECT_MESSAGE_TYPING
+    ],
+    partials: ["CHANNEL"]
 });
 
 client.commands = new Collection();
@@ -26,7 +31,7 @@ client.on('interactionCreate', async interaction => {
 
     const command = client.commands.get(interaction.commandName)
     try {
-        if (command) {
+        if (!command) {
             throw new CommandNotFound();
         }
         await command.execute(interaction);
@@ -36,10 +41,15 @@ client.on('interactionCreate', async interaction => {
                 console.log(error);
             }
             default: {
-                await interaction.reply({ content: 'Error during execution', ephemeral: true });
+                console.log(error);
+                await interaction.reply({ content: 'Execution error', ephemeral: true });
             }
         }
     }
+});
+
+client.on('messageCreate', async message => {
+    console.log(message);
 });
 
 client.login(process.env.TOKEN);
